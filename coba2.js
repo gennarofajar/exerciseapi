@@ -1,65 +1,42 @@
 const express = require('express');
-const { JsonWebTokenError } = require('jsonwebtoken');
-const jwt = require('jsonwebtoken');
-// variabel untuk endpoint
 const app = express()
+const jwt = require('jsonwebtoken');
+var bodyParser = require('body-parser')
+app.use( bodyParser.json() );       // to support JSON-encoded bodies
+app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
+  extended: true
+})); 
 
 customers = [
-    {id:1, name:"Steve"},
-    {id:2, name:"Jobs"}
+    {id:1, name:"Firdho"},
+    {id:2, name:"Genframen"},
+    {id:3, name:"Fernando"}
 ]
 
-/*
-*   get -> metode endpoint
-*   /   -> root
-*   pake localhost:3000
-*/
 app.get('/', (req, res) =>{
     res.send('Hello World :)');
 })
 
-/* 
-*   localhost:3000/api/customers 
-*/
 app.get('/api/customers', (req, res) => {
     // res.send('[1, 2, 3]');
     res.send(customers);
 })
 
 app.get('/api/customers/:id', (req, res) => {
-    /* 
-    *   Handle apabila data idnya tidak ada 
-    */
     const customer = customers.find(c => c.id == parseInt(req.params.id));
     if(!customer){
         res.status(404).send('The ID was not found')
     }
     res.send(customer)
-    // res.send(req.params.id);
 })
 
-app.get('/api/customers/:id/:name', (req, res) => {
-    res.send(req.params);
-})
-
-
-/*
-*   http://localhost:3000/api/customer
-*   di body postman ubah ke json dan masukkan
-*   { name: "blabla"}
-*   sebab di sini idnya otomatis bertambah tapi namanya harus diinputkan
-*/
 app.post('/api/customers', (req, res) => {
-    /* body itu ada di postman */
-    /* mengambil request (input) yg nama */
     if(!req.body.name || req.body.name.length < 3){
         res.status(400).send('Input the valid name');
     }
 
     const customer = {
         id: customers.length + 1,
-
-        /* ambil namanya */
         name: req.body.name
     };
     customers.push(customer);
@@ -99,15 +76,7 @@ app.delete('/api/customers/:id', (req, res) => {
 
 app.listen(3000, () => console.log('Listening to port 3000'))
 
-
-
-/* 
-*   === JWT === 
-*/
 app.get('/api/login', (req, res) => {
-    /* 
-    *   Buat di body seperti json
-    */
     const customer = {
         username: req.body.username,
         password: req.body.password
@@ -135,9 +104,6 @@ function verifyToken(req, res, next){
 }
 
 app.post('/api/customers', verifyToken, (req, res) => {
-    /* 
-    *   Buat di authorization
-    */
     jwt.verify(req.token, 'secret', (err, authData) => {
         if(err){
             res.status(403).send("Forbidden")
@@ -148,8 +114,6 @@ app.post('/api/customers', verifyToken, (req, res) => {
         }
     });
 });
-
-
 
 // heroku
 const PORT = process.env.PORT || 3000;
